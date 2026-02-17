@@ -1,0 +1,126 @@
+================================================================================
+FINAL COMPARISON REPORT: RANDOM FOREST vs MLP
+Dataset  : NF-UNSW-NB15-v2 (University of Queensland)
+Task     : Network Intrusion Detection (Forensic Investigation)
+Approach : Supervised Learning - Binary & Multi-class Classification
+================================================================================
+
+BINARY CLASSIFICATION (Benign vs Attack)
+--------------------------------------------------------------------------------
+  Metric                  Random Forest              MLP     Winner
+  -----------------------------------------------------------------
+  Accuracy (%)                  99.6390          99.6021         RF
+  Precision (%)                 91.7980          92.0104        MLP
+  Recall (%)                    99.8422          98.5535         RF
+  F1-Score (%)                  95.6513          95.1696         RF
+  ROC-AUC (%)                   99.9779          99.9517         RF
+  Train Time (s)               299.6900         324.9300         RF
+  Infer (ms/smp)                 0.0061           0.0453         RF
+
+  Verdict              RF wins on F1, Recall, ROC-AUC and speed
+
+MULTI-CLASS CLASSIFICATION (10 Attack Categories)
+--------------------------------------------------------------------------------
+  Metric                  Random Forest              MLP     Winner
+  -----------------------------------------------------------------
+  Accuracy (%)                  98.8518          98.6847         RF
+  Precision-W (%)               99.2959          98.7802         RF
+  Recall-W (%)                  98.8518          98.6847         RF
+  F1 Weighted (%)               99.0454          98.7048         RF
+  F1 Macro (%) **               68.6900          54.9300         RF
+  Train Time (s)               267.5400         341.1900         RF
+  Infer (ms/smp)                 0.0097           0.0442         RF
+
+  ** F1 Macro is the honest metric - treats all classes equally
+     regardless of class size. RF (68.69%) >> MLP (54.93%)
+
+  Verdict              RF clearly wins on all metrics
+
+PER-CLASS F1 SCORE BREAKDOWN
+--------------------------------------------------------------------------------
+  Class                   RF F1     MLP F1     Winner Note
+  ----------------------------------------------------------------------
+  Analysis                 0.16       0.14         RF  <-- Both struggle (rare class)
+  Backdoor                 0.15       0.19        MLP  <-- MLP slightly better
+  Benign                   1.00       1.00        Tie  Both perfect
+  DoS                      0.47       0.15         RF  <-- Both struggle (rare class)
+  Exploits                 0.86       0.79         RF  
+  Fuzzers                  0.84       0.77         RF  
+  Generic                  0.91       0.84         RF  
+  Reconnaissance           0.83       0.80         RF  
+  Shellcode                0.92       0.82         RF  
+  Worms                    0.76       0.00         RF  <-- MLP completely failed (0.00)
+
+================================================================================
+KEY FINDINGS
+--------------------------------------------------------------------------------
+
+  1. BINARY CLASSIFICATION
+     Both models perform excellently (>99% accuracy, >99.9% ROC-AUC).
+     RF has a slight edge in F1 (95.65% vs 95.17%) and is 7x faster
+     at inference (0.006ms vs 0.045ms per sample).
+
+  2. MULTI-CLASS CLASSIFICATION (honest F1 Macro metric)
+     RF significantly outperforms MLP: 68.69% vs 54.93% F1 Macro.
+     This confirms RF is better suited for tabular network flow data
+     with severe class imbalance.
+
+  3. CLASS IMBALANCE IMPACT
+     Both models struggle with rare classes (Analysis, Backdoor, DoS, Worms).
+     Worms (30 test samples) was completely missed by MLP (F1=0.00).
+     RF handled Worms better (F1=0.76) due to its ensemble voting nature.
+
+  4. FEATURE IMPORTANCE (RF insight)
+     Top features: MIN_TTL, MAX_TTL, MIN_IP_PKT_LEN, SHORTEST_FLOW_PKT
+     These TTL and packet length features are the strongest indicators
+     of malicious traffic in this dataset.
+
+  5. COMPUTATIONAL COST
+     Both models have similar training times (~300s each on CPU).
+     RF is significantly faster at inference - important for real-time
+     forensic detection systems.
+
+  6. FORENSIC INVESTIGATION SUITABILITY
+     RF is recommended for this use case because:
+     - Higher macro F1 (detects more attack types reliably)
+     - Faster inference (real-time detection)
+     - Feature importance (explainability for forensic reports)
+     - More robust to class imbalance
+================================================================================
+RECOMMENDATION
+--------------------------------------------------------------------------------
+
+  For network intrusion detection in forensic investigation:
+
+  WINNER: Random Forest
+
+  Reasons:
+  1. Higher F1 Macro (68.69% vs 54.93%) - detects more attack types
+  2. Better on rare/minority attack classes critical for forensics
+  3. 7x faster inference speed - suitable for real-time detection
+  4. Feature importance output - provides explainability for court/reports
+  5. More robust to the severe class imbalance in real network data
+
+  MLP is competitive for binary detection but falls behind on the
+  more realistic and challenging multi-class scenario.
+================================================================================
+EXPERIMENT SUMMARY
+--------------------------------------------------------------------------------
+  Dataset        : NF-UNSW-NB15-v2
+  Total samples  : 2,390,275
+  Train samples  : 1,912,220 (80%)
+  Test samples   :   478,055 (20%)
+  Features used  : 41 NetFlow features
+  Classes        : 10 (1 Benign + 9 attack types)
+  Imbalance ratio: 13,995:1 (Benign:Worms)
+  Hardware       : Pentium Silver N5000 @ 1.1GHz, 4GB RAM
+  RF library     : scikit-learn RandomForestClassifier
+  MLP library    : scikit-learn MLPClassifier (partial_fit)
+
+  OUTPUT CHARTS
+  chart1_binary_comparison.png
+  chart2_multiclass_comparison.png
+  chart3_perclass_f1_comparison.png
+  chart4_performance_comparison.png
+  chart5_radar_comparison.png
+================================================================================
